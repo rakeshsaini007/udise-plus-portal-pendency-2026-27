@@ -1,0 +1,6 @@
+{
+  "name": "UDISE+ School Performance Dashboard",
+  "description": "Interactive school performance metrics and pendency tracker integrated with Google Sheets and Google Apps Script.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
