@@ -128,11 +128,14 @@ function handleSaveOrUpdate(sheet, payload) {
   }
 
   var schoolName = String(payload.schoolName || "").trim();
-  var headmaster = String(payload.headmaster || "").trim();
+  var headmaster = String(payload.headmaster || "").trim().toUpperCase();
   var mobile = String(payload.mobile || "").trim();
   var feededStudents = payload.feededStudents !== undefined && payload.feededStudents !== "" ? Number(payload.feededStudents) : 0;
   var notFeededStudents = payload.notFeededStudents !== undefined && payload.notFeededStudents !== "" ? Number(payload.notFeededStudents) : 0;
   var reason = String(payload.reason || "").trim();
+  if (notFeededStudents === 0) {
+    reason = "100% Entry Completed";
+  }
 
   var existing = findSchoolByUdise(sheet, udise);
 

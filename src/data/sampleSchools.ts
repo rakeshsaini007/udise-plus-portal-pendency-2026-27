@@ -8,7 +8,7 @@ export const INITIAL_SAMPLE_SCHOOLS: SchoolRecord[] = [
     mobile: "9837102941",
     feededStudents: 184,
     notFeededStudents: 16,
-    reason: "Aadhaar authentication pending for 16 students",
+    reason: "",
     isComplete: true,
     updatedAt: "2026-10-01T14:30:00.000Z"
   },
@@ -29,7 +29,7 @@ export const INITIAL_SAMPLE_SCHOOLS: SchoolRecord[] = [
     mobile: "9412356789",
     feededStudents: 310,
     notFeededStudents: 0,
-    reason: "100% Entry Completed",
+    reason: "",
     isComplete: true,
     updatedAt: "2026-09-30T11:15:00.000Z"
   },
@@ -50,7 +50,7 @@ export const INITIAL_SAMPLE_SCHOOLS: SchoolRecord[] = [
     mobile: "9927182736",
     feededStudents: 142,
     notFeededStudents: 28,
-    reason: "S02 forms physical verification in progress at Block Resource Centre",
+    reason: "",
     isComplete: true,
     updatedAt: "2026-10-02T09:20:00.000Z"
   },
@@ -71,7 +71,7 @@ export const INITIAL_SAMPLE_SCHOOLS: SchoolRecord[] = [
     mobile: "9897123450",
     feededStudents: 220,
     notFeededStudents: 12,
-    reason: "Technical issues on portal while uploading photo documents",
+    reason: "",
     isComplete: true,
     updatedAt: "2026-10-01T16:45:00.000Z"
   },
@@ -102,7 +102,7 @@ export const INITIAL_SAMPLE_SCHOOLS: SchoolRecord[] = [
     mobile: "9758129034",
     feededStudents: 95,
     notFeededStudents: 5,
-    reason: "New admissions verification pending",
+    reason: "",
     isComplete: true,
     updatedAt: "2026-09-29T10:00:00.000Z"
   }

@@ -9,7 +9,8 @@ import {
   Send,
   Info,
   ShieldCheck,
-  AlertTriangle
+  AlertTriangle,
+  Lock
 } from 'lucide-react';
 import { SchoolRecord } from '../types';
 import { getSchoolByUdise, saveOrUpdateSchool, hasSchoolExistingData } from '../services/api';
@@ -51,6 +52,11 @@ export const UdiseSearchAndForm: React.FC<UdiseSearchAndFormProps> = ({
     action: 'saved' | 'updated';
   } | null>(null);
 
+  // Business logic: Check if pending students input is "0" or greater than 0
+  const pendingNum = Number(notFeededStudents);
+  const isZeroPending = notFeededStudents.trim() === '0' || (!isNaN(pendingNum) && pendingNum === 0 && notFeededStudents.trim() !== '');
+  const hasPendingStudents = !isZeroPending && notFeededStudents.trim() !== '' && !isNaN(pendingNum) && pendingNum > 0;
+
   // Quick lookup handler when UDISE Code changes or search triggered
   const handleLookupUdise = async (targetCode: string) => {
     const clean = targetCode.trim();
@@ -77,7 +83,7 @@ export const UdiseSearchAndForm: React.FC<UdiseSearchAndFormProps> = ({
         // Pre-fill form inputs
         setUdiseCode(found.udise);
         setSchoolName(found.schoolName || '');
-        setHeadmaster(found.headmaster || '');
+        setHeadmaster((found.headmaster || '').toUpperCase());
         setMobile(found.mobile || '');
         setFeededStudents(found.feededStudents !== undefined ? String(found.feededStudents) : '0');
         setNotFeededStudents(found.notFeededStudents !== undefined ? String(found.notFeededStudents) : '0');
@@ -162,16 +168,27 @@ export const UdiseSearchAndForm: React.FC<UdiseSearchAndFormProps> = ({
       return;
     }
 
+    const pendingCount = Number(notFeededStudents) || 0;
+
+    // Rule: If pending students is other than "0", Reason for Pendency is mandatory
+    if (pendingCount > 0 && !reason.trim()) {
+      alert('Please enter Reason for Pendency (Col G). It is mandatory when pending students is greater than 0.');
+      return;
+    }
+
+    // Rule: If pending students is "0", Col G is filled with "100% Entry Completed"
+    const finalReason = pendingCount === 0 ? '100% Entry Completed' : reason.trim();
+
     setIsSubmitting(true);
 
     const recordToSave: SchoolRecord = {
       udise: udiseCode.trim(),
       schoolName: schoolName.trim() || existingRecord?.schoolName || `School (${udiseCode})`,
-      headmaster: headmaster.trim(),
+      headmaster: headmaster.trim().toUpperCase(),
       mobile: mobile.trim(),
       feededStudents: Number(feededStudents) || 0,
-      notFeededStudents: Number(notFeededStudents) || 0,
-      reason: reason.trim() || (Number(notFeededStudents) === 0 ? '100% Entry Completed' : 'Pending verification'),
+      notFeededStudents: pendingCount,
+      reason: finalReason,
     };
 
     try {
@@ -329,44 +346,51 @@ export const UdiseSearchAndForm: React.FC<UdiseSearchAndFormProps> = ({
       <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6 shadow-xs">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Field 1: UDISE Code */}
+            {/* Field 1: UDISE Code (Non-editable, populated from search) */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                UDISE Code <span className="text-rose-500">*</span>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>UDISE Code <span className="text-rose-500">*</span></span>
+                <span className="text-[11px] text-slate-400 font-normal lowercase flex items-center gap-1">
+                  <Lock className="w-3 h-3 text-slate-400" /> auto-filled
+                </span>
               </label>
               <div className="relative">
                 <input
                   type="text"
                   required
+                  readOnly
                   value={udiseCode}
-                  onChange={(e) => setUdiseCode(e.target.value.replace(/\D/g, ''))}
-                  placeholder="Enter 11-digit UDISE Code"
-                  className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-mono focus:ring-2 focus:ring-blue-600 focus:bg-white focus:outline-none"
+                  placeholder="Populated via lookup above"
+                  className="w-full px-3.5 py-2.5 text-sm bg-slate-100 border border-slate-200 rounded-lg text-slate-700 font-mono cursor-not-allowed select-all focus:outline-none"
                 />
               </div>
             </div>
 
-            {/* Field 2: School Name */}
+            {/* Field 2: School Name (Non-editable, populated from sheet) */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                School Name <span className="text-rose-500">*</span>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>School Name <span className="text-rose-500">*</span></span>
+                <span className="text-[11px] text-slate-400 font-normal lowercase flex items-center gap-1">
+                  <Lock className="w-3 h-3 text-slate-400" /> auto-filled
+                </span>
               </label>
               <input
                 type="text"
                 required
+                readOnly
                 value={schoolName}
-                onChange={(e) => setSchoolName(e.target.value)}
-                placeholder="e.g. A S M CHILDRENS VALLEY PUBLIC SCHOOL"
-                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-blue-600 focus:bg-white focus:outline-none"
+                placeholder="Populated via lookup above"
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-100 border border-slate-200 rounded-lg text-slate-700 cursor-not-allowed select-all focus:outline-none"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Field 3: Name of Headmaster */}
+            {/* Field 3: Name of Headmaster (English Capital Letters Only) */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                Name of Headmaster <span className="text-rose-500">*</span>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>Name of Headmaster <span className="text-rose-500">*</span></span>
+                <span className="text-[11px] text-slate-500 font-normal lowercase">(capital letters only)</span>
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -376,9 +400,13 @@ export const UdiseSearchAndForm: React.FC<UdiseSearchAndFormProps> = ({
                   type="text"
                   required
                   value={headmaster}
-                  onChange={(e) => setHeadmaster(e.target.value)}
-                  placeholder="e.g. Ramesh Kumar"
-                  className="w-full pl-9 pr-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-blue-600 focus:bg-white focus:outline-none"
+                  onChange={(e) => {
+                    // Only English capital letters, spaces, and periods
+                    const cleaned = e.target.value.toUpperCase().replace(/[^A-Z\s.]/g, '');
+                    setHeadmaster(cleaned);
+                  }}
+                  placeholder="E.G. RAMESH KUMAR"
+                  className="w-full pl-9 pr-3.5 py-2.5 text-sm uppercase bg-slate-50 border border-slate-300 rounded-lg text-slate-900 tracking-wide font-medium focus:ring-2 focus:ring-blue-600 focus:bg-white focus:outline-none"
                 />
               </div>
             </div>
@@ -446,23 +474,38 @@ export const UdiseSearchAndForm: React.FC<UdiseSearchAndFormProps> = ({
               <p className="text-[11px] text-slate-500 mt-1">
                 Col F: Number of Students which are even not feeded on Udise Plus portal
               </p>
+              {isZeroPending && (
+                <div className="mt-2 p-2 bg-emerald-50 border border-emerald-200 rounded-md flex items-center gap-1.5 text-xs text-emerald-800">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>Pendency is 0: Reason field hidden. Col G will be saved as <strong>"100% Entry Completed"</strong>.</span>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Field 7: Reason for Pendency */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              Reason for Pendency (Col G)
-            </label>
+          {/* Field 7: Reason for Pendency (Only displayed & mandatory when pending students is other than 0) */}
+          {hasPendingStudents && (
+            <div className="animate-in fade-in duration-200">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>Reason for Pendency (Col G) <span className="text-rose-500">*</span></span>
+                <span className="text-[11px] font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                  Mandatory
+                </span>
+              </label>
 
-            <textarea
-              rows={2}
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Provide exact reason for pending students or write '100% Entry Completed'..."
-              className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-blue-600 focus:bg-white focus:outline-none"
-            />
-          </div>
+              <textarea
+                rows={2}
+                required
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Provide exact reason for pending students (e.g. Aadhaar authentication pending, physical verification in progress)..."
+                className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-rose-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-rose-500 focus:bg-white focus:outline-none"
+              />
+              <p className="text-[11px] text-slate-500 mt-1">
+                Col G: Reason is mandatory since pending students count is {notFeededStudents}.
+              </p>
+            </div>
+          )}
 
           {/* DYNAMIC ACTION BUTTON: "Update Record" vs "Submit Record" */}
           <div className="pt-3 border-t border-slate-100 flex justify-end">

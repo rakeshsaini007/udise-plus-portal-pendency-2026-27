@@ -2,7 +2,7 @@ import { GOOGLE_APPS_SCRIPT_URL, isAppsScriptUrlConfigured } from '../config';
 import { SchoolRecord, DashboardMetrics, ApiResponse } from '../types';
 import { INITIAL_SAMPLE_SCHOOLS } from '../data/sampleSchools';
 
-const LOCAL_STORAGE_KEY = 'udise_schools_data_v1';
+const LOCAL_STORAGE_KEY = 'udise_schools_data_v2';
 
 // Initialize local cache from localStorage or sample data
 export function getLocalSchools(): SchoolRecord[] {
@@ -11,13 +11,16 @@ export function getLocalSchools(): SchoolRecord[] {
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        return parsed.map((s: SchoolRecord) => ({
+          ...s,
+          reason: s.reason || '',
+        }));
       }
     }
   } catch (e) {
     console.error('Failed reading localStorage', e);
   }
-  return [...INITIAL_SAMPLE_SCHOOLS];
+  return INITIAL_SAMPLE_SCHOOLS.map(s => ({ ...s, reason: '' }));
 }
 
 export function saveLocalSchools(schools: SchoolRecord[]): void {
@@ -205,6 +208,7 @@ export async function saveOrUpdateSchool(record: SchoolRecord): Promise<ApiRespo
   const formattedRecord: SchoolRecord = {
     ...record,
     udise: record.udise.trim(),
+    headmaster: (record.headmaster || '').trim().toUpperCase(),
     feededStudents: Number(record.feededStudents) || 0,
     notFeededStudents: Number(record.notFeededStudents) || 0,
     isComplete: true,
